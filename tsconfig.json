@@ -1,26 +1,34 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
+    "incremental": true,
+    "target": "esnext", // 指定ECMAScript目标版本
+    "useDefineForClassFields": true,
+    "lib": ["dom", "dom.iterable", "esnext"], // TS需要引用的库，即声明文件。新的包含了旧的，不需要每个都重复引入。
+    "allowJs": false,
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */,
     "allowSyntheticDefaultImports": true,
+    "composite": false,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "module": "esnext", // 指定生成哪个模块系统代码
+    "moduleResolution": "node", // 模块解析策略，ts默认用node的解析策略，即相对的方式导入
+    "resolveJsonModule": true, // 直接加载json文件
+    "esModuleInterop": true, // 可以直接使用 import react from react, 否则要 import * as react from react
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "noUnusedLocals": false, // 检查只声明、未使用的局部变量(只提示不报错)
+    "noUnusedParameters": false, // 检查未使用的函数参数(只提示不报错)
+    "noImplicitReturns": true, // 每个分支都会有返回值
+    /* 配置基础地址 */
+    "baseUrl": ".",
+    /* 配置路径别名 */
+    "paths": {
+      "*": ["src/*"]
+    },
+
+    "types": ["vite/client"] // 静态资源导入支持
   },
-  "include": [
-    "src"
-  ]
+  "include": ["vite-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }
