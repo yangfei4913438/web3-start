@@ -9,7 +9,7 @@ const Contract = () => {
 
   const getOwner = () => {
     // 测试的合约地址
-    const contractAddress: string = '0xADD405211Ca8ef3bFA944Bf7fA9F54f47a79773d';
+    const contractAddress: string = import.meta.env.VITE_CONTRACT_ADDRESS;
     const zombieFactory = new window.web3.eth.Contract(owner_abi, contractAddress);
     zombieFactory.methods.getOwner().call(function (err: any, res: any) {
       if (err) {
