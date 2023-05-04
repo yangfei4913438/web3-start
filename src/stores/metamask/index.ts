@@ -1,13 +1,14 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAtom } from 'jotai';
-import detectEthereumProvider from '@metamask/detect-provider';
-
-import { metamaskAtom } from './type';
+import Web3 from 'web3';
+import { type MetaMaskInpageProvider } from '@metamask/providers';
+import { metamaskAtom } from './consts';
+import { formatBalance, isAccountList } from './utils';
 
 declare global {
   interface Window {
-    ethereum: any;
-    web3: any;
+    ethereum?: MetaMaskInpageProvider;
+    web3?: any;
   }
 }
 
@@ -15,43 +16,55 @@ const useMetamask = () => {
   // 账号数据
   const [metamask, setMetamask] = useAtom(metamaskAtom);
 
-  const initMetamask = useCallback(async () => {
-    if (metamask.account) return;
+  const isMetaMaskInstalled = useMemo(() => {
+    return typeof window.ethereum !== 'undefined' && Boolean(window.ethereum.isMetaMask);
+  }, []);
 
-    const provider = await detectEthereumProvider();
+  const resetMetamask = () => {
+    setMetamask({
+      wallet: '',
+      balance: '',
+      isMetaMaskInstalled,
+    });
+  };
 
-    if (provider) {
-      if (provider !== window.ethereum) {
-        console.error('Do you have multiple wallets installed?');
-        return;
+  const handleAccountsChanged = useCallback(
+    async (newAccounts: any) => {
+      if (!isMetaMaskInstalled) return;
+
+      if (isAccountList(newAccounts) && newAccounts.length > 0) {
+        const newBalance = await window.ethereum?.request<string>({
+          method: 'eth_getBalance',
+          params: [newAccounts[0], 'latest'],
+        });
+        const narrowedBalance = typeof newBalance === 'string' ? newBalance : '';
+        setMetamask({
+          wallet: newAccounts[0],
+          balance: formatBalance(narrowedBalance),
+          isMetaMaskInstalled: true,
+        });
+      } else {
+        resetMetamask();
       }
-    } else {
-      console.log('Please install MetaMask!');
-      return;
-    }
+    },
+    [isMetaMaskInstalled]
+  );
 
-    let currentAccount: string | null = null;
-    function handleAccountsChanged(accounts: string[]) {
-      if (accounts.length === 0) {
-        console.log('Please connect to MetaMask.');
-      } else if (accounts[0] !== currentAccount) {
-        currentAccount = accounts[0];
-        setMetamask({ account: currentAccount });
-      }
-    }
+  useEffect(() => {
+    window.ethereum?.on('accountsChanged', handleAccountsChanged);
+    return () => {
+      window.ethereum?.removeAllListeners('accountsChanged');
+    };
+  }, [handleAccountsChanged]);
 
+  const initMetamask = useCallback(() => {
     if (window.ethereum) {
       window.ethereum
-        .request({ method: 'eth_accounts' })
-        .then(handleAccountsChanged)
-        .catch((err: any) => {
-          console.error(err);
-        });
-
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-
-      const accounts = await window.ethereum
-        .request({ method: 'eth_requestAccounts' })
+        .request<string[]>({ method: 'eth_requestAccounts' })
+        .then(async (accounts) => {
+          window.web3 = new Web3(Web3.givenProvider);
+          await handleAccountsChanged(accounts);
+        })
         .catch((err: any) => {
           if (err.code === 4001) {
             console.log('Please connect to MetaMask.');
@@ -59,10 +72,12 @@ const useMetamask = () => {
             console.error(err);
           }
         });
-      currentAccount = accounts[0];
-      setMetamask({ account: currentAccount as string });
+    } else {
+      console.log('Please install MetaMask!');
+      resetMetamask();
+      return;
     }
-  }, [setMetamask]);
+  }, [handleAccountsChanged]);
 
   return {
     initMetamask,

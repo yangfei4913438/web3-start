@@ -22,7 +22,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.8",
     "@material-tailwind/react": "^1.4.2",
-    "@metamask/detect-provider": "^2.0.0",
+    "@metamask/providers": "^10.2.1",
     "classnames": "^2.3.2",
     "jotai": "^2.0.4",
     "jotai-devtools": "^0.4.0",
