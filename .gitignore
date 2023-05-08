@@ -2,15 +2,18 @@
 
 # dependencies
 /node_modules
-/.pnp
-.pnp.js
-.idea/
+
+# production
+/build
+/dist
 
 # testing
 /coverage
 
-# production
-/build
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
 
 # misc
 .DS_Store
